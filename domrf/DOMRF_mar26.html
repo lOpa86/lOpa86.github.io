@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="chrome=1,IE=edge" />
+	<title>DOMRF_mar26</title>
+	<style>
+		html {
+			height:100%;
+		}
+		body {
+			margin:0;
+			height:100%;
+		}
+	</style>
+	<!-- copy these lines to your document head: -->
+
+	<meta name="viewport" content="user-scalable=yes, width=1280" />
+	<style>
+   @font-face {
+    font-family: 'gilroyregular';
+    src: url('DOMRF_mar26.hyperesources/gilroy-regular.woff2') format('woff2'),
+         url('DOMRF_mar26.hyperesources/gilroy-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+</style>
+	<style>
+   @font-face {
+    font-family: 'gilroymedium';
+    src: url('DOMRF_mar26.hyperesources/gilroy-medium.woff2') format('woff2'),
+         url('DOMRF_mar26.hyperesources/gilroy-medium.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+</style>
+	<style>
+   @font-face {
+    font-family: 'gilroybold';
+    src: url('DOMRF_mar26.hyperesources/gilroy-bold.woff2') format('woff2'),
+         url('DOMRF_mar26.hyperesources/gilroy-bold.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+</style>
+	<style>
+   @font-face {
+    font-family: 'gilroylight';
+    src: url('DOMRF_mar26.hyperesources/gilroy-light.woff2') format('woff2'),
+         url('DOMRF_mar26.hyperesources/gilroy-light.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+</style>
+
+<style> 
+
+.HYPE_scene {
+    --input-range-color: #83C002;
+}
+
+input:focus {
+    outline: none;
+}
+
+/* Общие стили для range */
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: transparent; /* Убираем фон, чтобы не мешал */
+}
+
+/* Chrome, Safari, Edge */
+input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    background: linear-gradient(to right, var(--input-range-color) var(--position, 10%), transparent var(--position, 10%));
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 55px;
+    height: 24px;
+    background-image: url('DOMRF_mar26.hyperesources/arrow.svg');
+    background-repeat: no-repeat;
+    background-size: 35px;
+    background-position: center;
+    background-color: var(--input-range-color);
+    border-radius: 12px;
+    cursor: pointer;
+    margin-top: -9px; /* Центрируем thumb относительно трека */
+    border: none;
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-track {
+    height: 6px;
+    background: linear-gradient(to right, var(--input-range-color) var(--position, 10%), transparent var(--position, 10%));
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 55px;
+    height: 24px;
+    background-image: url('DOMRF_mar26.hyperesources/arrow.svg');
+    background-repeat: no-repeat;
+    background-size: 35px;
+    background-position: center;
+    background-color: var(--input-range-color);
+    border-radius: 12px;
+    cursor: pointer;
+    border: none;
+}
+
+input[type="range"]::-moz-range-progress {
+    height: 6px;
+    background-color: var(--input-range-color);
+}
+
+
+</style>
+
+<script>
+
+
+</script>
+
+	<!-- end copy -->
+  </head>
+  <body>
+	<!-- copy these lines to your document: -->
+    <script>
+
+      function hypeSceneLoadHandler(event) {
+        const hypeScene = event.target;
+        console.log(hypeScene);
+
+        const rangeElem = document.querySelector('.range-container');
+        const rangeDragAreaElem = document.querySelector('.range-drag-area');
+        const depositInputElem = document.querySelector('.deposit-input');
+
+        const totalElem = document.querySelector('.total');
+        const oldRateElem = document.querySelector('.old-rate');
+        const newRateElem = document.querySelector('.new-rate');
+
+        console.log(rangeElem);
+        console.log(rangeDragAreaElem);
+        console.log(1, depositInputElem);
+        console.log(totalElem);
+        console.log(oldRateElem);
+        console.log(newRateElem);
+
+        function updateRangeTrack() {
+          const el = rangeDragAreaElem;
+          const value = (el.value - el.min) / (el.max - el.min) * 100;
+          rangeElem.style.setProperty('--position', `${value}%`);
+        }
+
+        function formatMoney(amount) {
+          const formatter = new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          });
+
+          return formatter.format(amount);
+        }
+
+        function parseMoney(formatted) {
+          return parseInt(formatted.replace(/\D/g, ''));
+        }
+
+        function updateProfit() {
+          const initialRate = 2.6405 / 100;
+          const newRate = 2.67396667 / 100;
+
+          const formatted = depositInputElem.value;
+          const value = parseInt(formatted.replace(/\D/g, '')); // 1500000
+
+          console.log(value);
+          console.log(formatMoney(value));
+
+          let rate;
+          let htmlOldRate;
+          let htmlNewRate;
+
+          if (value >= 1500000) {
+            rate = newRate;
+            htmlOldRate = 14.3;
+            htmlNewRate = 16;
+          } else {
+            rate = initialRate;
+            htmlOldRate = 14.1;
+            htmlNewRate = 15.8;
+          }
+
+          const total = Math.floor(value + (value * rate));
+
+          totalElem.innerText = formatMoney(total);
+          oldRateElem.innerText = htmlOldRate + '%';
+          newRateElem.innerText = htmlNewRate + '%';
+        }
+
+        rangeDragAreaElem.addEventListener('input', function () {
+          updateRangeTrack();
+
+          depositInputElem.value = formatMoney(this.value)
+
+          updateProfit();
+        });
+
+        depositInputElem.addEventListener('focus', function () {
+          this.value = parseMoney(this.value);
+
+          updateProfit();
+        });
+
+        function onchangeHandler() {
+          // Забираем с инпута только числа
+          let value = parseMoney(this.value);
+
+          // Минимальный и максимальный предел
+          const minValue = 30000;
+          const maxValue = 15000000;
+
+          if (value < minValue) {
+            value = minValue;
+          }
+
+          if (value > maxValue) {
+            value = maxValue;
+          }
+
+          rangeDragAreaElem.value = value;
+
+          // Форматировать текст
+          this.value = formatMoney(value);
+
+          updateRangeTrack();
+          updateProfit();
+        }
+
+        depositInputElem.addEventListener('blur', onchangeHandler);
+
+        depositInputElem.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            // Программно убираем фокус для того чтобы сработал обработчик blur
+            depositInputElem.blur();
+          }
+        });
+      }
+
+      window.addEventListener('HypeSceneLoad', hypeSceneLoadHandler);
+
+    </script>
+
+	<div id="domrfmar26_hype_container" class="HYPE_document" style="margin:auto;position:relative;width:100%;height:100%;overflow:hidden;">
+		<script type="text/javascript" charset="utf-8" src="DOMRF_mar26.hyperesources/domrfmar26_hype_generated_script.js?55534"></script>
+	</div>
+
+	<!-- end copy -->
+	
+
+
+	<!-- text content for search engines: -->
+
+	<div style="display:none" aria-hidden=true>
+
+		<div></div>
+		<div>14.3%
+16%
+</div>
+		<div>1 540 109 ₽</div>
+		<div></div>
+		<div>16%</div>
+		<div>Сумма вклада в рублях</div>
+		<div>Ставка</div>
+		<div>Сумма вклада в рублях
+</div>
+		<div></div>
+		<div>Сумма в конце срока</div>
+
+	</div>
+
+	<!-- end text content: -->
+
+  </body>
+</html>
