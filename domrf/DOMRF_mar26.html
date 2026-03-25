@@ -54,13 +54,17 @@
 </style>
 
 <style> 
-
 .HYPE_scene {
     --input-range-color: #83C002;
 }
 
 input:focus {
     outline: none;
+}
+
+.range-container {
+    height: 24px;
+    position: relative;
 }
 
 /* Общие стили для range */
@@ -70,6 +74,10 @@ input[type="range"] {
     width: 100%;
     height: 6px;
     background: transparent; /* Убираем фон, чтобы не мешал */
+    position: absolute;
+    top: 9px;
+    left: 0;
+    margin: 0;
 }
 
 /* Chrome, Safari, Edge */
@@ -116,47 +124,96 @@ input[type="range"]::-moz-range-progress {
     height: 6px;
     background-color: var(--input-range-color);
 }
-
-
 </style>
-
-<script>
-
-
-</script>
 
 	<!-- end copy -->
   </head>
   <body>
 	<!-- copy these lines to your document: -->
     <script>
-
-      function hypeSceneLoadHandler(event) {
-        const hypeScene = event.target;
-        console.log(hypeScene);
-
-        const rangeElem = document.querySelector('.range-container');
-        const rangeDragAreaElem = document.querySelector('.range-drag-area');
-        const depositInputElem = document.querySelector('.deposit-input');
-
-        const totalElem = document.querySelector('.total');
-        const oldRateElem = document.querySelector('.old-rate');
-        const newRateElem = document.querySelector('.new-rate');
-
-        console.log(rangeElem);
-        console.log(rangeDragAreaElem);
-        console.log(1, depositInputElem);
-        console.log(totalElem);
-        console.log(oldRateElem);
-        console.log(newRateElem);
-
-        function updateRangeTrack() {
-          const el = rangeDragAreaElem;
-          const value = (el.value - el.min) / (el.max - el.min) * 100;
-          rangeElem.style.setProperty('--position', `${value}%`);
+      class DepositCalculator {
+        constructor(options = {}) {
+          this.minValue = options.min || 30000;
+          this.maxValue = options.max || 15000000;
+          this.step = options.step || 10000;
         }
 
-        function formatMoney(amount) {
+        init(hypeScene) {
+          this.hypeScene = hypeScene;
+          this.cacheDom();
+          this.bindEvents();
+          this.updateRangeTrack();
+          this.updateProfit();
+        }
+
+        cacheDom() {
+          this.dom = {
+            rangeContainer: this.hypeScene.querySelector('.range-container'),
+            digitInput: this.hypeScene.querySelector('.deposit-input'),
+            rangeInput: this.hypeScene.querySelector('.range-drag-area'),
+            total: this.hypeScene.querySelector('.total'),
+            oldRate: this.hypeScene.querySelector('.old-rate'),
+            newRate: this.hypeScene.querySelector('.new-rate')
+          };
+
+          // Проверка наличия элементов
+          for (const [key, el] of Object.entries(this.dom)) {
+            if (!el) console.warn(`Element ${key} not found`);
+          }
+        }
+
+        bindEvents() {
+          this.dom.rangeInput.addEventListener('input', this.onRangeInput.bind(this));
+          this.dom.digitInput.addEventListener('focus', this.onFocus.bind(this));
+          this.dom.digitInput.addEventListener('blur', this.onBlur.bind(this));
+          this.dom.digitInput.addEventListener('keydown', this.onKeydown.bind(this));
+        }
+
+        updateRangeTrack() {
+          const el = this.dom.rangeInput;
+          const value = (el.value - el.min) / (el.max - el.min) * 100;
+          this.dom.rangeContainer.style.setProperty('--position', `${value}%`);
+        }
+
+        onRangeInput() {
+          this.updateRangeTrack();
+          this.dom.digitInput.value = this.formatMoney(this.dom.rangeInput.value);
+          this.updateProfit();
+        }
+
+        onFocus() {
+          this.dom.digitInput.value = this.parseMoney(this.dom.digitInput.value);
+          this.updateProfit();
+        }
+
+        onBlur() {
+          let value = this.parseMoney(this.dom.digitInput.value);
+
+          if (value < this.minValue) {
+            value = this.minValue;
+          }
+
+          if (value > this.maxValue) {
+            value = this.maxValue;
+          }
+
+          this.dom.rangeInput.value = value;
+
+          // Форматировать текст
+          this.dom.digitInput.value = this.formatMoney(value);
+
+          this.updateRangeTrack();
+          this.updateProfit();
+        }
+
+        onKeydown(event) {
+          if (event.key === 'Enter') {
+            // Программно убираем фокус для того чтобы сработал обработчик blur
+            this.dom.digitInput.blur();
+          }
+        }
+
+        formatMoney(amount) {
           const formatter = new Intl.NumberFormat('ru-RU', {
             style: 'currency',
             currency: 'RUB',
@@ -167,19 +224,15 @@ input[type="range"]::-moz-range-progress {
           return formatter.format(amount);
         }
 
-        function parseMoney(formatted) {
+        parseMoney(formatted) {
           return parseInt(formatted.replace(/\D/g, ''));
         }
 
-        function updateProfit() {
+        updateProfit() {
           const initialRate = 2.6405 / 100;
           const newRate = 2.67396667 / 100;
 
-          const formatted = depositInputElem.value;
-          const value = parseInt(formatted.replace(/\D/g, '')); // 1500000
-
-          console.log(value);
-          console.log(formatMoney(value));
+          const value = this.parseMoney(this.dom.digitInput.value);
 
           let rate;
           let htmlOldRate;
@@ -197,58 +250,18 @@ input[type="range"]::-moz-range-progress {
 
           const total = Math.floor(value + (value * rate));
 
-          totalElem.innerText = formatMoney(total);
-          oldRateElem.innerText = htmlOldRate + '%';
-          newRateElem.innerText = htmlNewRate + '%';
+          this.dom.total.innerText = this.formatMoney(total);
+          this.dom.oldRate.innerText = htmlOldRate + '%';
+          this.dom.newRate.innerText = htmlNewRate + '%';
         }
+      }
 
-        rangeDragAreaElem.addEventListener('input', function () {
-          updateRangeTrack();
+      const depositCalculator = new DepositCalculator();
+      console.log(depositCalculator);
 
-          depositInputElem.value = formatMoney(this.value)
-
-          updateProfit();
-        });
-
-        depositInputElem.addEventListener('focus', function () {
-          this.value = parseMoney(this.value);
-
-          updateProfit();
-        });
-
-        function onchangeHandler() {
-          // Забираем с инпута только числа
-          let value = parseMoney(this.value);
-
-          // Минимальный и максимальный предел
-          const minValue = 30000;
-          const maxValue = 15000000;
-
-          if (value < minValue) {
-            value = minValue;
-          }
-
-          if (value > maxValue) {
-            value = maxValue;
-          }
-
-          rangeDragAreaElem.value = value;
-
-          // Форматировать текст
-          this.value = formatMoney(value);
-
-          updateRangeTrack();
-          updateProfit();
-        }
-
-        depositInputElem.addEventListener('blur', onchangeHandler);
-
-        depositInputElem.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter') {
-            // Программно убираем фокус для того чтобы сработал обработчик blur
-            depositInputElem.blur();
-          }
-        });
+      function hypeSceneLoadHandler(event) {
+        const hypeScene = event.target;
+        depositCalculator.init(hypeScene);
       }
 
       window.addEventListener('HypeSceneLoad', hypeSceneLoadHandler);
@@ -256,7 +269,7 @@ input[type="range"]::-moz-range-progress {
     </script>
 
 	<div id="domrfmar26_hype_container" class="HYPE_document" style="margin:auto;position:relative;width:100%;height:100%;overflow:hidden;">
-		<script type="text/javascript" charset="utf-8" src="DOMRF_mar26.hyperesources/domrfmar26_hype_generated_script.js?25067"></script>
+		<script type="text/javascript" charset="utf-8" src="DOMRF_mar26.hyperesources/domrfmar26_hype_generated_script.js?23576"></script>
 	</div>
 
 	<!-- end copy -->
